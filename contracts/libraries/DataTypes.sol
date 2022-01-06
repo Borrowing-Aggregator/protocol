@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.0;
 
 library DataTypes {
     // refer to the whitepaper, section 1.1 basic concepts for a formal description of these properties.
@@ -43,6 +43,14 @@ library DataTypes {
 
     struct UserConfigurationMap {
         uint256 data;
+    }
+
+    struct Rates {
+        uint256 depositAPR;
+        uint256 incentiveDepositAPRPercent;
+        uint256 variableBorrowAPR;
+        uint256 incentiveBorrowAPRPercent;
+        uint256 stableBorrowAPR;
     }
 
     enum InterestRateMode {NONE, STABLE, VARIABLE}
