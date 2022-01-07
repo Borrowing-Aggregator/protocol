@@ -1,14 +1,16 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "hardhat/console.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/IAaveIncentivesController.sol";
 import "./interfaces/IERC20.sol";
+import "./interfaces/IDataprovider.sol";
+
 import {DataTypes} from './libraries/DataTypes.sol';
 
-contract Dataprovider {
+contract Dataprovider is IDataprovider {
 
     address public owner;
     ILendingPool pool;
@@ -27,7 +29,7 @@ contract Dataprovider {
         incentives = _incentives;
     }
 
-    function aaveRates() public view returns(uint, uint, uint) {
+    function aaveRates() public view override returns(uint256, uint256, uint256) {
         DataTypes.ReserveData memory reserveData = pool.getReserveData(coin);
 
         uint256 liquidityRate = reserveData.currentLiquidityRate;
@@ -37,17 +39,19 @@ contract Dataprovider {
         return (liquidityRate, variableBorrowRate, stableBorrowRate);
     }
 
-    function aaveIncentives() public view returns(uint, uint, uint) {
+    function aaveIncentives() public view override returns(uint256, uint256, uint256, uint256) {
         DataTypes.ReserveData memory reserveData = pool.getReserveData(coin);
 
         address aTokenAddress = reserveData.aTokenAddress;
         address variableDebtTokenAddress = reserveData.variableDebtTokenAddress;
-        address stableDebtTokenAddress = reserveData.stableDebtTokenAddress;
 
         (,uint256 aEmissionPerSecond,) = incentives.getAssetData(aTokenAddress);
         (,uint256 vEmissionPerSecond,) = incentives.getAssetData(variableDebtTokenAddress);
 
-        return (aEmissionPerSecond, vEmissionPerSecond);
+        uint256 totalATokenSupply = IERC20(aTokenAddress).totalSupply();
+        uint256 totalCurrentVariableDebt = IERC20(variableDebtTokenAddress).totalSupply();
+
+        return (aEmissionPerSecond, vEmissionPerSecond, totalATokenSupply, totalCurrentVariableDebt);
     }
 
 }
