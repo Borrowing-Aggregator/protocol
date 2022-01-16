@@ -57,4 +57,7 @@ interface ILendingPoolAddressesProvider {
     function getLendingRateOracle() external view returns (address);
 
     function setLendingRateOracle(address lendingRateOracle) external;
+
+    function getLendingPoolCore() external view returns (address payable);
+
 }
