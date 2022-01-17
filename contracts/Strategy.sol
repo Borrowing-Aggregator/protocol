@@ -8,7 +8,6 @@ import {DataTypes} from './libraries/DataTypes.sol';
 
 contract Strategy {
 
-
     // Constants
     uint256 RAY = 10 ** 27;
     uint256 WEI_DECIMALS = 10 ** 18; // All emissions are in wei units, 18 decimal places
@@ -19,7 +18,7 @@ contract Strategy {
     IDataprovider dataprovider;
     IOracle pricefeed;
 
-    uint256 activeStrategy; // 0 : AAVE, 1 : BENQI
+    int256 activeStrategy; // 0 : AAVE, 1 : BENQI
 
     constructor(IDataprovider _dataprovider, IOracle _pricefeed) public {
         dataprovider = _dataprovider;
@@ -72,8 +71,8 @@ contract Strategy {
         return rates;
     }
 
-    // ADD CHAINLINK KEEPERS
-    function chooseStrategy() private returns(uint256) {
+    // TO DO : ADD CHAINLINK KEEPERS
+    function chooseStrategy() private {
         DataTypes.Rates memory aaveRates = aaveAPR();
         DataTypes.Rates memory benqiRates = benqiAPR();
 
@@ -88,7 +87,7 @@ contract Strategy {
         }
     }
 
-    function getStrategy() public view returns(uint256) {
+    function getActiveStrategy() public view returns(int256) {
         return activeStrategy;
     }
 
