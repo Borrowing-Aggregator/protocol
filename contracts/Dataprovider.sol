@@ -5,32 +5,38 @@ pragma experimental ABIEncoderV2;
 import "hardhat/console.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/IAaveIncentivesController.sol";
-import "./interfaces/IERC20.sol";
+import "./dependencies/openzeppelin/contracts/IERC20.sol";
 import "./interfaces/IDataprovider.sol";
+import "./interfaces/QiTokenInterfaces.sol";
 
 import {DataTypes} from './libraries/DataTypes.sol';
 
 contract Dataprovider is IDataprovider {
 
     address public owner;
+
     ILendingPool pool;
     IAaveIncentivesController incentives;
-    address public coin;
+    QiTokenInterface qiToken;
+    address public asset;
 
-    // AAVE lending pool : 0x76cc67FF2CC77821A70ED14321111Ce381C2594D
-    // AAVE incentives controller : 0xa1EF206fb9a8D8186157FC817fCddcC47727ED55
-    // WETH : 0x9668f5f55f2712Dd2dfa316256609b516292D554
-    // WAVAX : 0xd00ae08403B9bbb9124bB305C09058E32C39A48c
+    // Fuji AAVE lending pool : 0x76cc67FF2CC77821A70ED14321111Ce381C2594D
+    // Fuji AAVE incentives controller : 0xa1EF206fb9a8D8186157FC817fCddcC47727ED55
+    // Fuji AAVE WETH : 0x9668f5f55f2712Dd2dfa316256609b516292D554
+    // Fuji AAVE WAVAX : 0xd00ae08403B9bbb9124bB305C09058E32C39A48c
 
-    constructor(ILendingPool _pool, IAaveIncentivesController _incentives, address _coin) public {
+    // Fuji BENQI QIToken : 0xe401e9ce0e354ad9092a63ee1dfa3168bb83f3da
+
+    constructor(ILendingPool _pool, IAaveIncentivesController _incentives, QiTokenInterface _qiToken, address _asset) public {
         owner = msg.sender;
         pool = _pool;
-        coin = _coin;
         incentives = _incentives;
+        qiToken = _qiToken;
+        asset = _asset;
     }
 
     function aaveRates() public view override returns(uint256, uint256, uint256) {
-        DataTypes.ReserveData memory reserveData = pool.getReserveData(coin);
+        DataTypes.ReserveData memory reserveData = pool.getReserveData(asset);
 
         uint256 liquidityRate = reserveData.currentLiquidityRate;
         uint256 variableBorrowRate = reserveData.currentVariableBorrowRate;
@@ -40,7 +46,7 @@ contract Dataprovider is IDataprovider {
     }
 
     function aaveIncentives() public view override returns(uint256, uint256, uint256, uint256) {
-        DataTypes.ReserveData memory reserveData = pool.getReserveData(coin);
+        DataTypes.ReserveData memory reserveData = pool.getReserveData(asset);
 
         address aTokenAddress = reserveData.aTokenAddress;
         address variableDebtTokenAddress = reserveData.variableDebtTokenAddress;
@@ -53,5 +59,11 @@ contract Dataprovider is IDataprovider {
 
         return (aEmissionPerSecond, vEmissionPerSecond, totalATokenSupply, totalCurrentVariableDebt);
     }
+
+    function benqirates() public view returns(uint256) {
+        uint256 borrowRatePerTimestamp = qiToken.borrowRatePerTimestamp();
+        return borrowRatePerTimestamp;
+    }
+
 
 }

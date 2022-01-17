@@ -46,11 +46,11 @@ library DataTypes {
     }
 
     struct Rates {
-        uint256 depositAPR;
-        uint256 incentiveDepositAPRPercent;
-        uint256 variableBorrowAPR;
-        uint256 incentiveBorrowAPRPercent;
-        uint256 stableBorrowAPR;
+        uint256 depositAPR;  // Deposit APR
+        uint256 incentiveDepositAPR; //  Deposit reward APR
+        uint256 variableBorrowAPR; // Borrow APR
+        uint256 incentiveBorrowAPR; // Borrow reward APR
+        uint256 stableBorrowAPR; // Borrow stable APR
     }
 
     enum InterestRateMode {NONE, STABLE, VARIABLE}

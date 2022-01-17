@@ -12,6 +12,9 @@ contract BAToken is IERC1155, Ownable{
   // Mapping from token ID to totalSupply
   mapping(uint256 => uint256) internal totalSupply;
 
+  // Mapping from account to operator approvals
+  mapping(address => mapping(address => bool)) internal _operatorApprovals;
+
   //adress should not be null
   function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
     require(account != address(0));
@@ -66,5 +69,21 @@ contract BAToken is IERC1155, Ownable{
     require(amountScaled != 0 && accountBalance >= amountScaled);
     balances[_id][_account] = accountBalance - amountScaled;
     totalSupply[_id] = assetTotalBalance - amountScaled;
+  }
+
+
+  function setApprovalForAll(address operator, bool approved) public virtual override {
+    require(_msgSender() != operator);
+
+    _operatorApprovals[_msgSender()][operator] = approved;
+    emit ApprovalForAll(_msgSender(), operator, approved);
+  }
+
+  function isApprovedForAll(address account, address operator) public view virtual override returns (bool){
+    return _operatorApprovals[account][operator];
+  }
+
+  function supportsInterface(bytes4 interfaceId) public view override returns (bool){
+    return (interfaceId == type(IERC1155).interfaceId);
   }
 }

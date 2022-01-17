@@ -8,18 +8,25 @@ import {DataTypes} from './libraries/DataTypes.sol';
 
 contract Strategy {
 
-    IDataprovider dataprovider;
-    IOracle pricefeed;
 
+    // Constants
     uint256 RAY = 10 ** 27;
     uint256 WEI_DECIMALS = 10 ** 18; // All emissions are in wei units, 18 decimal places
     uint256 UNDERLYING_TOKEN_DECIMALS = 10 ** 18; // for aUSDC will be 10**6 because USDC has 6 decimals
     uint256 SECONDS_PER_YEAR = 31536000;
     uint256 DECIMALS = 10 ** 6; // to get a 5 digits uint APR like : xxxxx means x,xxxx% APR
 
-    constructor (IDataprovider _dataprovider, IOracle _pricefeed) public {
+    IDataprovider dataprovider;
+    IOracle pricefeed;
+
+    uint256 activeStrategy; // 0 : AAVE, 1 : BENQI
+
+    constructor(IDataprovider _dataprovider, IOracle _pricefeed) public {
         dataprovider = _dataprovider;
         pricefeed = _pricefeed;
+
+        // Fuji AAVE lending pool : 0x76cc67FF2CC77821A70ED14321111Ce381C2594D
+
     }
 
     function aaveAPR() public view returns(DataTypes.Rates memory) {
@@ -50,13 +57,39 @@ contract Strategy {
         uint256 aEmissionPerYear = aEmissionPerSecond * SECONDS_PER_YEAR;
         uint256 vEmissionPerYear = vEmissionPerSecond * SECONDS_PER_YEAR;
 
-        rates.incentiveDepositAPRPercent = DECIMALS*(aEmissionPerYear * priceAVAX * WEI_DECIMALS)/
+        rates.incentiveDepositAPR = DECIMALS*(aEmissionPerYear * priceAVAX * WEI_DECIMALS)/
                               (totalATokenSupply * priceETH * UNDERLYING_TOKEN_DECIMALS);
 
-        rates.incentiveBorrowAPRPercent = DECIMALS*(vEmissionPerYear * priceAVAX * WEI_DECIMALS)/
+        rates.incentiveBorrowAPR = DECIMALS*(vEmissionPerYear * priceAVAX * WEI_DECIMALS)/
                               (totalCurrentVariableDebt * priceETH * UNDERLYING_TOKEN_DECIMALS);
 
         return rates;
+    }
+
+    function benqiAPR() public view returns(DataTypes.Rates memory) {
+        DataTypes.Rates memory rates;
+
+        return rates;
+    }
+
+    // ADD CHAINLINK KEEPERS
+    function chooseStrategy() private returns(uint256) {
+        DataTypes.Rates memory aaveRates = aaveAPR();
+        DataTypes.Rates memory benqiRates = benqiAPR();
+
+        uint256 aaveBorrowAPR = aaveRates.variableBorrowAPR + aaveRates.incentiveBorrowAPR;
+        uint256 benqiBorrowAPR = benqiRates.variableBorrowAPR + benqiRates.incentiveBorrowAPR;
+
+        // TO DO : WRITE BETTER STRATEGY
+        if (aaveBorrowAPR > benqiBorrowAPR) {
+            activeStrategy = 0;
+        } else {
+            activeStrategy = 1;
+        }
+    }
+
+    function getStrategy() public view returns(uint256) {
+        return activeStrategy;
     }
 
 }
