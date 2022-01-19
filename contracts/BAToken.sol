@@ -41,14 +41,14 @@ contract BAToken is IERC1155, Ownable{
     revert("Tokens are non transferrable");
   }
 
-  function mint(address _account, uint256 _id, uint256 _amount) public onlyOwner {
+  function mint(address _account, uint256 _id, uint256 _amount) external  {
     require(_account != address(0));
     _mint(_account, _id, _amount);
     address operator = _msgSender();
     emit TransferSingle(operator, address(0), _account, _id, _amount);
   }
 
-  function burn(address _account, uint256 _id, uint256 _amount) public onlyOwner {
+  function burn(address _account, uint256 _id, uint256 _amount) external {
     require(_account != address(0));
     _burn(_account, _id, _amount);
     emit TransferSingle(_msgSender(), _account, address(0), _id, _amount);

@@ -9,7 +9,6 @@ function APRtoAPY(depositAPR, variableBorrowAPR, stableBorrowAPR) {
     return {depositAPY, variableBorrowAPY, stableBorrowAPY};
 }
 
-
 function healthFactor(collateral, borrow) {
     const liquidationThreshold = 0.75;
     const healthfactor = collateral * liquidationThreshold / borrow;
@@ -20,7 +19,7 @@ function healthFactor(collateral, borrow) {
 function TVL(collateral, borrow) {
     const tvl = borrow / collateral;
 
-    return healthfactor;
+    return tvl;
 }
 
 function borrowLimitUsed(collateral, borrow) {

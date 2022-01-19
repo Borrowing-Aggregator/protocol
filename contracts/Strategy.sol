@@ -3,37 +3,42 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IOracle.sol";
 import "./interfaces/IDataprovider.sol";
-
+import "@openzeppelin/contracts/access/Ownable.sol";
 import {DataTypes} from './libraries/DataTypes.sol';
 
-contract Strategy {
+contract Strategy is Ownable {
 
     // Constants
     uint256 RAY = 10 ** 27;
     uint256 WEI_DECIMALS = 10 ** 18; // All emissions are in wei units, 18 decimal places
     uint256 UNDERLYING_TOKEN_DECIMALS = 10 ** 18; // for aUSDC will be 10**6 because USDC has 6 decimals
     uint256 SECONDS_PER_YEAR = 31536000;
-    uint256 DECIMALS = 10 ** 6; // to get a 5 digits uint APR like : xxxxx means x,xxxx% APR
-
-    IDataprovider dataprovider;
-    IOracle pricefeed;
+    uint256 DECIMALS = 10 ** 6; // to 0.get a 5 digits uint APR like : xxxxx means x,xxxx% APR
 
     int256 activeStrategy; // 0 : AAVE, 1 : BENQI
 
-    constructor(IDataprovider _dataprovider, IOracle _pricefeed) public {
-        dataprovider = _dataprovider;
-        pricefeed = _pricefeed;
+    address public collateralAsset;
+    address public borrowAsset;
 
-        // Fuji AAVE lending pool : 0x76cc67FF2CC77821A70ED14321111Ce381C2594D
+    IDataprovider dataprovider;
+    IOracle oracle;
 
+    constructor(address _collateralAsset, address _borrowAsset) public {
+        collateralAsset = _collateralAsset;
+        borrowAsset = _borrowAsset;
+    }
+
+    function initialization(address _dataprovider, address _oracle) external onlyOwner {
+      dataprovider = IDataprovider(_dataprovider);
+      oracle = IOracle(_oracle);
     }
 
     function aaveAPR() public view returns(DataTypes.Rates memory) {
         DataTypes.Rates memory rates;
 
         // Load data from dataprovider and pricefeed
-        uint256 priceAVAX = uint256(pricefeed.getAVAXPrice());
-        uint256 priceETH =  uint256(pricefeed.getETHPrice());
+        uint256 priceAVAX = oracle.getUSDPrice(collateralAsset);
+        uint256 priceETH =  oracle.getUSDPrice(borrowAsset);
         (
             uint256 liquidityRate,
             uint256 variableBorrowRate,
@@ -71,13 +76,13 @@ contract Strategy {
         return rates;
     }
 
-    // TO DO : ADD CHAINLINK KEEPERS
+    // TO DO : ADD CHAINLINK KEEPERSs
     function chooseStrategy() private {
         DataTypes.Rates memory aaveRates = aaveAPR();
         DataTypes.Rates memory benqiRates = benqiAPR();
 
-        uint256 aaveBorrowAPR = aaveRates.variableBorrowAPR + aaveRates.incentiveBorrowAPR;
-        uint256 benqiBorrowAPR = benqiRates.variableBorrowAPR + benqiRates.incentiveBorrowAPR;
+        int256 aaveBorrowAPR = int256(aaveRates.variableBorrowAPR) - int256(aaveRates.incentiveBorrowAPR);
+        int256 benqiBorrowAPR = int256(benqiRates.variableBorrowAPR) - int256(benqiRates.incentiveBorrowAPR);
 
         // TO DO : WRITE BETTER STRATEGY
         if (aaveBorrowAPR > benqiBorrowAPR) {

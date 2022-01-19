@@ -13,11 +13,10 @@ import {DataTypes} from './libraries/DataTypes.sol';
 
 contract Dataprovider is IDataprovider {
 
-    address public owner;
-
     ILendingPool pool;
     IAaveIncentivesController incentives;
     QiTokenInterface qiToken;
+
     address public asset;
 
     // Fuji AAVE lending pool : 0x76cc67FF2CC77821A70ED14321111Ce381C2594D
@@ -27,11 +26,10 @@ contract Dataprovider is IDataprovider {
 
     // Fuji BENQI QIToken : 0xe401e9ce0e354ad9092a63ee1dfa3168bb83f3da
 
-    constructor(ILendingPool _pool, IAaveIncentivesController _incentives, QiTokenInterface _qiToken, address _asset) public {
-        owner = msg.sender;
-        pool = _pool;
-        incentives = _incentives;
-        qiToken = _qiToken;
+    constructor (address _pool, address _incentives, address _qiToken, address _asset) public {
+        pool = ILendingPool(_pool);
+        incentives = IAaveIncentivesController(_incentives);
+        qiToken = QiTokenInterface(_qiToken);
         asset = _asset;
     }
 
