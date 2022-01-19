@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/IBAToken.sol";
 
-contract BAToken is IERC1155, Ownable{
+contract BAToken is IBAToken, Ownable{
 
    // Mapping from token ID to account balances
   mapping(uint256 => mapping(address => uint256)) internal balances;
@@ -41,14 +42,14 @@ contract BAToken is IERC1155, Ownable{
     revert("Tokens are non transferrable");
   }
 
-  function mint(address _account, uint256 _id, uint256 _amount) external  {
+  function mint(address _account, uint256 _id, uint256 _amount) override external  {
     require(_account != address(0));
     _mint(_account, _id, _amount);
     address operator = _msgSender();
     emit TransferSingle(operator, address(0), _account, _id, _amount);
   }
 
-  function burn(address _account, uint256 _id, uint256 _amount) external {
+  function burn(address _account, uint256 _id, uint256 _amount) override external {
     require(_account != address(0));
     _burn(_account, _id, _amount);
     emit TransferSingle(_msgSender(), _account, address(0), _id, _amount);
