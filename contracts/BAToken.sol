@@ -36,7 +36,6 @@ contract BAToken is IBAToken, Ownable {
         require(accounts.length == ids.length);
 
         uint256[] memory batchBalances = new uint256[](accounts.length);
-
         for (uint256 i = 0; i < accounts.length; ++i) {
             batchBalances[i] = balanceOf(accounts[i], ids[i]);
         }
