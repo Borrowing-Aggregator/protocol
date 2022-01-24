@@ -3,7 +3,10 @@ node_modules
 coverage
 coverage.json
 typechain
-
+.env.json
+.DS_Store
+build
+migrations
 #Hardhat files
 cache
 artifacts
