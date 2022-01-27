@@ -53,7 +53,6 @@ contract Vault is Ownable {
     constructor(address _collateralAsset, address _borrowAsset) public {
         collateralAsset = _collateralAsset; // FUJI WAVAX : 0xd00ae08403B9bbb9124bB305C09058E32C39A48c
         borrowAsset = _borrowAsset; // FUJI WETH : 0x9668f5f55f2712Dd2dfa316256609b516292D554
-        // FUJI WAVAX : 0xd00ae08403B9bbb9124bB305C09058E32C39A48c
 
         // IERC1155 Fuji AVAX
         ids[collateralAsset] = 0;
@@ -88,7 +87,8 @@ contract Vault is Ownable {
         require(msg.value == _amountToDeposit, "Invalid amount : msgvalue should be the deposit");
 
         // Lend
-        IERC20(collateralAsset).transferFrom(msg.sender, address(this), _amountToDeposit);
+        //IERC20(collateralAsset).approve(address(this), _amountToDeposit);
+        //IERC20(collateralAsset).transferFrom(msg.sender, address(this), _amountToDeposit);
         baToken.mint(msg.sender, ids[collateralAsset], _amountToDeposit);
 
         // Active lend
