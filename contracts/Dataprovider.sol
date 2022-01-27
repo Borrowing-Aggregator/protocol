@@ -2,10 +2,12 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "hardhat/console.sol";
-import "./interfaces/ILendingPool.sol";
+import "./interfaces/IAaveLendingPool.sol";
 import "./interfaces/IAaveIncentivesController.sol";
-import "./dependencies/openzeppelin/contracts/IERC20.sol";
 import "./interfaces/IDataprovider.sol";
 import "./interfaces/QiTokenInterfaces.sol";
 
@@ -13,7 +15,7 @@ import {DataTypes} from './libraries/DataTypes.sol';
 
 contract Dataprovider is IDataprovider {
 
-    ILendingPool pool;
+    IAaveLendingPool pool;
     IAaveIncentivesController incentives;
     QiTokenInterface qiToken;
 
@@ -27,7 +29,7 @@ contract Dataprovider is IDataprovider {
     // Fuji BENQI QIToken : 0xe401e9ce0e354ad9092a63ee1dfa3168bb83f3da
 
     constructor (address _pool, address _incentives, address _qiToken, address _asset) public {
-        pool = ILendingPool(_pool);
+        pool = IAaveLendingPool(_pool);
         incentives = IAaveIncentivesController(_incentives);
         qiToken = QiTokenInterface(_qiToken);
         asset = _asset;

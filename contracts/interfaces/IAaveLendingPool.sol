@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPoolAddressesProvider} from './ILendingPoolAddressesProvider.sol';
+import {IAaveLendingPoolAddressesProvider} from './IAaveLendingPoolAddressesProvider.sol';
 import {DataTypes} from '../libraries/DataTypes.sol';
 
-interface ILendingPool {
+interface IAaveLendingPool {
   /**
    * @dev Emitted on deposit()
    * @param reserve The address of the underlying asset of the reserve
@@ -402,7 +402,7 @@ interface ILendingPool {
 
   function getReservesList() external view returns (address[] memory);
 
-  function getAddressesProvider() external view returns (ILendingPoolAddressesProvider);
+  function getAddressesProvider() external view returns (IAaveLendingPoolAddressesProvider);
 
   function setPause(bool val) external;
 

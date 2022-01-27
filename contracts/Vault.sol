@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./BAToken.sol";
 import "./interfaces/IStrategy.sol";
 import "./interfaces/IOracle.sol";
+import "./interfaces/IAaveLendingPool.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -21,6 +22,7 @@ contract Vault is Ownable {
     BAToken baToken;
     IStrategy strategy;
     IOracle oracle;
+    IAaveLendingPool aavePool;
 
     event Borrow (
         address indexed asset,
@@ -49,50 +51,49 @@ contract Vault is Ownable {
     mapping(address => uint) public ids;
 
     constructor(address _collateralAsset, address _borrowAsset) public {
-        collateralAsset = _collateralAsset; // FUJI AVAX : 0xd00ae08403B9bbb9124bB305C09058E32C39A48c
+        collateralAsset = _collateralAsset; // FUJI WAVAX : 0xd00ae08403B9bbb9124bB305C09058E32C39A48c
         borrowAsset = _borrowAsset; // FUJI WETH : 0x9668f5f55f2712Dd2dfa316256609b516292D554
+        // FUJI WAVAX : 0xd00ae08403B9bbb9124bB305C09058E32C39A48c
 
         // IERC1155 Fuji AVAX
         ids[collateralAsset] = 0;
         // IERC1155 Fuji WETH
         ids[borrowAsset] = 1;
 
-
     }
 
     receive() external payable {}
 
     function initialization(address _oracle, address _strategy, address _baToken) external onlyOwner {
+
       // Smart contracts
       oracle = IOracle(_oracle);
       strategy = IStrategy(_strategy);
       baToken = BAToken(_baToken);
+      aavePool = IAaveLendingPool(0x76cc67FF2CC77821A70ED14321111Ce381C2594D);
 
       // Variables
       decimalsAsset = 18;
       factorA = 3;
       factorB = 4;
+
     }
 
                         ////////////////////////////////
                        //      PUBLIC FUNCTIONS      //
                       ////////////////////////////////
 
-    function deposit(uint256 _amountToDeposit) public payable {
-        _deposit(_amountToDeposit);
-    }
-
-    function _deposit(uint256 _amountToDeposit) private {
+    function deposit(uint256 _amountToDeposit) public payable  {
         require(_amountToDeposit != 0, "Invalid amount : should differ from 0");
         require(msg.value == _amountToDeposit, "Invalid amount : msgvalue should be the deposit");
 
         // Lend
-        //IERC20(collateralAsset).transferFrom(msg.sender, address(this), _amountToDeposit);
+        IERC20(collateralAsset).transferFrom(msg.sender, address(this), _amountToDeposit);
         baToken.mint(msg.sender, ids[collateralAsset], _amountToDeposit);
 
         // Active lend
         int256 activeStrategy = strategy.getActiveStrategy();
-        _lendFromProtocol(_amountToDeposit, activeStrategy);
+        //_lendFromProtocol(_amountToDeposit, activeStrategy);
 
         emit Deposit(collateralAsset, msg.sender, _amountToDeposit);
     }
@@ -110,7 +111,7 @@ contract Vault is Ownable {
 
         // Withdraw collateral
         baToken.burn(msg.sender, ids[collateralAsset], _amountToWithdraw);
-        payable(msg.sender).transfer(_amountToWithdraw);
+        IERC20(collateralAsset).transferFrom(address(this), msg.sender, _amountToWithdraw);
         //IERC20(collateralAsset).transferFrom(address(this), payable(msg.sender), _amountToWithdraw);
 
         emit Withdraw(collateralAsset, msg.sender, _amountToWithdraw);
@@ -126,13 +127,14 @@ contract Vault is Ownable {
         uint256 minCollateral = getMinCollateralforBorrow(_borrow);
         require(collateral > minCollateral , "healthFactor should be >=1");
 
+        // Active borrow
+        int256 activeStrategy = strategy.getActiveStrategy();
+        _borrowFromProtocol(_amountToBorrow, activeStrategy);
+
         // Borrow
         IERC20(borrowAsset).transferFrom(address(this), payable(msg.sender), _amountToBorrow);
         baToken.mint(msg.sender, ids[borrowAsset], _amountToBorrow);
 
-        // Active borrow
-        int256 activeStrategy = strategy.getActiveStrategy();
-        _borrowFromProtocol(_amountToBorrow, activeStrategy);
 
         emit Borrow(borrowAsset, msg.sender, _amountToBorrow);
     }
@@ -143,9 +145,13 @@ contract Vault is Ownable {
         uint256 totalBorrowUser = baToken.balanceOf(msg.sender, ids[borrowAsset]);
         require(totalBorrowUser >= _amountToRepay, "Invalid amount");
 
-        // repay loan
-        baToken.burn(msg.sender, ids[borrowAsset], _amountToRepay);
+        // Active repay
+        int256 activeStrategy = strategy.getActiveStrategy();
         _repayProtocol(_amountToRepay);
+
+        // repay loan
+        IERC20(borrowAsset).transferFrom(address(this), msg.sender, _amountToRepay);
+        baToken.burn(msg.sender, ids[borrowAsset], _amountToRepay);
 
         emit Repay(borrowAsset, msg.sender, _amountToRepay);
 
