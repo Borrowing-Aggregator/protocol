@@ -1,8 +1,8 @@
 async function main() {
 
   const aavePoolAddr = process.env.AAVEPOOL_ADDRESS;
-  const aaveIncentivesAddr = process.env.AAVEICENTIVES_ADDRESS;
-  const qiToken = process.env.QITOKEN_ADDRESS;
+  const aaveIncentivesAddr = process.env.AAVEINCENTIVES_ADDRESS;
+  const qiTokenAddr = process.env.QITOKEN_ADDRESS;
   const wEthAddr = process.env.WETH_ADDRESS;
   const wAvaxAddr = process.env.WAVAX_ADDRESS;
   const wethAggregatorAddr = process.env.ETH_AGG_ADDRESS;
@@ -12,7 +12,7 @@ async function main() {
 
   // Deploy Dataprovider contract
   const Dataprovider = await ethers.getContractFactory("Dataprovider");
-  const dataprovider = await Dataprovider.deploy(poolAddr, incentivesAddr, qiTokenAddr, wETHAddr);
+  const dataprovider = await Dataprovider.deploy(aavePoolAddr, aaveIncentivesAddr, qiTokenAddr, wEthAddr);
   await dataprovider.deployed();
   console.log("Dataprovider deployed to:", dataprovider.address);
 
@@ -41,7 +41,6 @@ async function main() {
   console.log("Vault deployed to:", vault.address);
 
   // AAVE LendingPool
-
   aavePool = await ethers.getContractAt("IAaveLendingPool", aavePoolAddr, signer);
   borrowAsset = await ethers.getContractAt("IERC20", wEthAddr)
   collateralAsset = await ethers.getContractAt("IERC20", wAvaxAddr);
@@ -51,7 +50,6 @@ async function main() {
 
   // Init Vault contract
   await vault.initialization(oracle.address, strategy.address, baToken.address);
-
 
 }
 
