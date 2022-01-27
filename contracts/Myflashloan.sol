@@ -76,16 +76,6 @@ contract Myflashloan is FlashLoanReceiverBaseV2, Ownable {
     }
 
     /*
-     *  Flash multiple assets
-     */
-    function flashloan(address[] memory assets, uint256[] memory amounts)
-        public
-        onlyOwner
-    {
-        _flashloan(assets, amounts);
-    }
-
-    /*
      *  Flash loan 1000000000000000000 wei (1 ether) worth of `_asset`
      */
     function flashloan(address _asset) public onlyOwner {
