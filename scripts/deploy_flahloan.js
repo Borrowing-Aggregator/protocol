@@ -5,7 +5,7 @@ async function main() {
 
     console.log("Account balance:", (await deployer.getBalance()).toString());
 
-    const flashloan = await ethers.getContractFactory("Flashloan");
+    const flashloan = await ethers.getContractFactory("Myflashloan");
     const flashloanContract = await flashloan.deploy("0x7fdC1FdF79BE3309bf82f4abdAD9f111A6590C0f");
 
     console.log("flashloan address:", flashloanContract.address);
