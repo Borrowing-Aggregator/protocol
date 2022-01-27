@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "./FlashLoanReceiverBase.sol";
-import "./interfaces/ILendingPoolAddressesProvider.sol";
-import "./interfaces/ILendingPool.sol";
+import "./interfaces/IAaveLendingPoolAddressesProvider.sol";
+import "./interfaces/IAaveLendingPool.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Flashloan is FlashLoanReceiverBase, Ownable {
@@ -49,7 +49,7 @@ contract Flashloan is FlashLoanReceiverBase, Ownable {
         bytes memory params = "";
         uint16 referralCode = 0;
 
-        ILendingPool lendingPool = ILendingPool(
+        IAaveLendingPool lendingPool = IAaveLendingPool(
             addressesProvider.getLendingPool()
         );
         lendingPool.flashLoan(

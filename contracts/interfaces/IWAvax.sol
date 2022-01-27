@@ -5,5 +5,6 @@ interface WAVAX {
 
     function deposit() external payable;
     function withdraw() external payable;
+    function approve(address addr, uint256 amount) external;
 
 }

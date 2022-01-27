@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./BAToken.sol";
+import "./interfaces/IBAToken.sol";
 import "./interfaces/IStrategy.sol";
 import "./interfaces/IOracle.sol";
 import "./interfaces/IAaveLendingPool.sol";
@@ -14,12 +14,14 @@ contract Vault is Ownable {
 
     address public collateralAsset;
     address public borrowAsset;
+
     uint256 decimalsAsset;
+    uint8 factorA;
+    uint8 factorB;
 
-    uint8 factorA = 3;
-    uint8 factorB = 4;
+    uint256 DECIMALS = 10 ** 6; // to 0.get a 5 digits uint APR like : xxxxx means x,xxxx% APR
 
-    BAToken baToken;
+    IBAToken baToken;
     IStrategy strategy;
     IOracle oracle;
     IAaveLendingPool aavePool;
@@ -68,7 +70,7 @@ contract Vault is Ownable {
       // Smart contracts
       oracle = IOracle(_oracle);
       strategy = IStrategy(_strategy);
-      baToken = BAToken(_baToken);
+      baToken = IBAToken(_baToken);
       aavePool = IAaveLendingPool(0x76cc67FF2CC77821A70ED14321111Ce381C2594D);
 
       // Variables
@@ -87,8 +89,7 @@ contract Vault is Ownable {
         require(msg.value == _amountToDeposit, "Invalid amount : msgvalue should be the deposit");
 
         // Lend
-        //IERC20(collateralAsset).approve(address(this), _amountToDeposit);
-        //IERC20(collateralAsset).transferFrom(msg.sender, address(this), _amountToDeposit);
+        IERC20(collateralAsset).transferFrom(msg.sender, address(this), _amountToDeposit);
         baToken.mint(msg.sender, ids[collateralAsset], _amountToDeposit);
 
         // Active lend
@@ -112,7 +113,6 @@ contract Vault is Ownable {
         // Withdraw collateral
         baToken.burn(msg.sender, ids[collateralAsset], _amountToWithdraw);
         IERC20(collateralAsset).transferFrom(address(this), msg.sender, _amountToWithdraw);
-        //IERC20(collateralAsset).transferFrom(address(this), payable(msg.sender), _amountToWithdraw);
 
         emit Withdraw(collateralAsset, msg.sender, _amountToWithdraw);
     }
@@ -134,7 +134,6 @@ contract Vault is Ownable {
         // Borrow
         IERC20(borrowAsset).transferFrom(address(this), payable(msg.sender), _amountToBorrow);
         baToken.mint(msg.sender, ids[borrowAsset], _amountToBorrow);
-
 
         emit Borrow(borrowAsset, msg.sender, _amountToBorrow);
     }
@@ -171,12 +170,37 @@ contract Vault is Ownable {
         repay(_amount);
     }
 
+    function getHealthFactor() external returns (uint256) {
+      uint256 collateral = getDebtCollateralToken();
+      uint256 borrow = getDebtBorrowToken();
+      uint256 healthFactor = healthFactor(collateral, borrow);
+
+      return healthFactor;
+    }
+
+    function getTVL() external returns (uint256) {
+      uint256 collateral = getDebtCollateralToken();
+      uint256 borrow = getDebtBorrowToken();
+      uint256 tvl = TVL(collateral, borrow);
+
+      return tvl;
+    }
+
+    function getBorrowLimitUsed() external returns (uint256) {
+      uint256 collateral = getDebtCollateralToken();
+      uint256 borrow = getDebtBorrowToken();
+      uint256 borrowLimitUsed = borrowLimitUsed(collateral, borrow);
+
+      return borrowLimitUsed;
+    }
+
                         ////////////////////////////////
                        //     PRIVATE FUNCTIONS      //
                       ////////////////////////////////
 
     function _lendFromProtocol(uint256 _amount, int256 _strategy) private {
         // INTERFACE WITH AAVE/BENQI
+
     }
 
     function _borrowFromProtocol(uint256 _amount, int256 _strategy) private {
@@ -187,25 +211,47 @@ contract Vault is Ownable {
         // INTERFACE WITH AAVE/BENQI
     }
 
+    function healthFactor(uint256 collateral, uint256 borrow) private returns(uint256) {
+        uint256 price = oracle.getPairPrice(collateralAsset, borrowAsset);
+        uint256 healthfactor = (price * collateral * factorA) / (borrow * factorB);
+
+        return healthfactor;
+    }
+
+    function TVL(uint256 collateral, uint256 borrow) private returns(uint256) {
+        uint256 price = oracle.getPairPrice(collateralAsset, borrowAsset);
+        uint256 tvl = (price * borrow) / collateral;
+
+        return tvl;
+    }
+
+    function borrowLimitUsed(uint256 collateral, uint256 borrow) private returns(uint256) {
+        uint256 price = oracle.getPairPrice(collateralAsset, borrowAsset);
+        uint256 borrowLimitUsed = (price * borrow * factorB) / (collateral * factorA);
+
+        return borrowLimitUsed;
+    }
+
                       ////////////////////////////////
-                     //        GET FUNCTIONS       //
+                     //       VIEW FUNCTIONS       //
                     ////////////////////////////////
 
     function getMinCollateralforBorrow(uint256 _borrow) public view returns (uint256) {
-        //uint256 price = oracle.getPairPrice(collateralAsset, borrowAsset);
-        //uint256 minCollateral = _borrow * price * factorB / factorA;
-        uint256 minCollateral = _borrow * factorB / factorA;
+        uint256 price = oracle.getPairPrice(collateralAsset, borrowAsset);
+        uint256 minCollateral = (price * _borrow * factorB) / factorA;
 
         return minCollateral;
     }
 
-    function getDebtCollateralToken() external view returns(uint256) {
-        uint256 balanceCollateralBAToken = baToken.balanceOf(msg.sender, 0);
+    function getDebtCollateralToken() public view returns(uint256) {
+        uint256 balanceCollateralBAToken = baToken.balanceOf(msg.sender, ids[collateralAsset]);
+
         return balanceCollateralBAToken;
     }
 
-    function getDebtBorrowToken() external view returns(uint256) {
-        uint256 balanceBorrowBAToken = baToken.balanceOf(msg.sender, 1);
+    function getDebtBorrowToken() public view returns(uint256) {
+        uint256 balanceBorrowBAToken = baToken.balanceOf(msg.sender, ids[borrowAsset]);
+
         return balanceBorrowBAToken;
     }
 

@@ -1,5 +1,6 @@
 async function main() {
 
+  // Variables
   const aavePoolAddr = process.env.AAVEPOOL_ADDRESS;
   const aaveIncentivesAddr = process.env.AAVEINCENTIVES_ADDRESS;
   const qiTokenAddr = process.env.QITOKEN_ADDRESS;
@@ -8,7 +9,9 @@ async function main() {
   const wethAggregatorAddr = process.env.ETH_AGG_ADDRESS;
   const avaxAggregatorAddr = process.env.AVAX_AGG_ADDRESSS;
 
-  console.log("Deploying contracts with the account: " + deployer.address);
+  // Signer
+  const [signer] = await ethers.getSigners();
+  console.log("Hardhat connected to: ", signer.address);
 
   // Deploy Dataprovider contract
   const Dataprovider = await ethers.getContractFactory("Dataprovider");
@@ -40,16 +43,13 @@ async function main() {
   await vault.deployed();
   console.log("Vault deployed to:", vault.address);
 
-  // AAVE LendingPool
-  aavePool = await ethers.getContractAt("IAaveLendingPool", aavePoolAddr, signer);
-  borrowAsset = await ethers.getContractAt("IERC20", wEthAddr)
-  collateralAsset = await ethers.getContractAt("IERC20", wAvaxAddr);
+  // Init Vault contract
+  await vault.initialization(oracle.address, strategy.address, baToken.address);
+  console.log("Vault contract initialized");
 
   // Init Strategy contract
   await strategy.initialization(dataprovider.address, oracle.address);
-
-  // Init Vault contract
-  await vault.initialization(oracle.address, strategy.address, baToken.address);
+  console.log("Strategy contract initialized");
 
 }
 
