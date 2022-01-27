@@ -23,7 +23,7 @@ const privateKey = process.env.PRIVATE_KEY;
  */
 module.exports = {
   solidity: {
-    version: "0.8.4",
+    version: "0.8.0",
     settings: {
       optimizer: {
         enabled: true,
@@ -32,13 +32,13 @@ module.exports = {
     },
   },
   networks: {
-    avalancheTest: {
+    fuji: {
       url: 'https://api.avax-test.network/ext/bc/C/rpc',
       gasPrice: 225000000000,
       chainId: 43113,
       accounts: [`0x${privateKey}`]
     },
-    avalancheMain: {
+    avax: {
       url: 'https://api.avax.network/ext/bc/C/rpc',
       gasPrice: 225000000000,
       chainId: 43114,

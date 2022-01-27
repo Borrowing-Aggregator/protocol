@@ -76,7 +76,7 @@ contract Strategy is Ownable {
         return rates;
     }
 
-    // TO DO : ADD CHAINLINK KEEPERSs
+    // TO DO : ADD CHAINLINK KEEPERS"
     function chooseStrategy() private {
         DataTypes.Rates memory aaveRates = aaveAPR();
         DataTypes.Rates memory benqiRates = benqiAPR();
