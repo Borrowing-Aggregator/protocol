@@ -84,9 +84,9 @@ contract Vault is Ownable {
                        //      PUBLIC FUNCTIONS      //
                       ////////////////////////////////
 
-    function deposit(uint256 _amountToDeposit) public payable  {
+    function deposit(uint256 _amountToDeposit) public {
         require(_amountToDeposit != 0, "Invalid amount : should differ from 0");
-        require(msg.value == _amountToDeposit, "Invalid amount : msgvalue should be the deposit");
+        // require(msg.value == _amountToDeposit, "Invalid amount : msgvalue should be the deposit");
 
         // Lend
         IERC20(collateralAsset).transferFrom(msg.sender, address(this), _amountToDeposit);
@@ -94,7 +94,7 @@ contract Vault is Ownable {
 
         // Active lend
         int256 activeStrategy = strategy.getActiveStrategy();
-        //_lendFromProtocol(_amountToDeposit, activeStrategy);
+        _lendFromProtocol(_amountToDeposit, activeStrategy);
 
         emit Deposit(collateralAsset, msg.sender, _amountToDeposit);
     }
