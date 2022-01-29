@@ -17,7 +17,7 @@ contract Dataprovider is IDataprovider {
 
     IAaveLendingPool pool;
     IAaveIncentivesController incentives;
-    QiTokenInterface qiToken;
+    IQiToken qiToken;
 
     address public asset;
 
@@ -31,7 +31,7 @@ contract Dataprovider is IDataprovider {
     constructor (address _pool, address _incentives, address _qiToken, address _asset) public {
         pool = IAaveLendingPool(_pool);
         incentives = IAaveIncentivesController(_incentives);
-        qiToken = QiTokenInterface(_qiToken);
+        qiToken = IQiToken(_qiToken);
         asset = _asset;
     }
 
@@ -60,9 +60,11 @@ contract Dataprovider is IDataprovider {
         return (aEmissionPerSecond, vEmissionPerSecond, totalATokenSupply, totalCurrentVariableDebt);
     }
 
-    function benqirates() public view returns(uint256) {
+    function benqirates() public view returns(uint256, uint256) {
         uint256 borrowRatePerTimestamp = qiToken.borrowRatePerTimestamp();
-        return borrowRatePerTimestamp;
+        uint256 supplyRatePerTimestamp = qiToken.supplyRatePerTimestamp();
+
+        return (supplyRatePerTimestamp, borrowRatePerTimestamp);
     }
 
 
