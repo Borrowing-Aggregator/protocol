@@ -33,7 +33,12 @@ contract Vault is Ownable {
         address indexed depositor,
         uint256 indexed amount
     );
+<<<<<<< Updated upstream
     event Repay(
+=======
+
+    event Repay (
+>>>>>>> Stashed changes
         address indexed asset,
         address indexed depositor,
         uint256 indexed amount
@@ -96,12 +101,17 @@ contract Vault is Ownable {
     //     EXTERNAL FUNCTIONS     //
     ////////////////////////////////
 
+<<<<<<< Updated upstream
     function deposit(uint256 _amountToDeposit) external payable {
         require(_amountToDeposit != 0, "Invalid amount : should differ from 0");
         require(
             msg.value == _amountToDeposit,
             "Invalid amount : msgvalue should be the deposit"
         );
+=======
+    function deposit(uint256 _amountToDeposit) public payable {
+        require(_amountToDeposit != 0, "Invalid amount : should differ from 0");
+>>>>>>> Stashed changes
 
         // Lend
         IERC20(collateralAsset).transferFrom(
@@ -113,7 +123,7 @@ contract Vault is Ownable {
 
         // Active lend
         int256 activeStrategy = strategy.getActiveStrategy();
-        //_lendFromProtocol(_amountToDeposit, activeStrategy);
+        _lendFromProtocol(_amountToDeposit, activeStrategy);
 
         emit Deposit(collateralAsset, msg.sender, _amountToDeposit);
     }
@@ -134,9 +144,15 @@ contract Vault is Ownable {
 
         // Loan check
         uint256 _borrow = baToken.balanceOf(msg.sender, ids[borrowAsset]);
+        if(_borrow != 0) {
         uint256 newCollateral = userBalance - _amountToWithdraw;
         uint256 minCollateral = getMinCollateralforBorrow(_borrow);
+<<<<<<< Updated upstream
         require(newCollateral > minCollateral, "healthFactor should be >=1");
+=======
+        require(newCollateral >= minCollateral , "healthFactor should be >=1");
+       }
+>>>>>>> Stashed changes
 
         // Withdraw collateral
         baToken.burn(msg.sender, ids[collateralAsset], _amountToWithdraw);
@@ -250,11 +266,11 @@ contract Vault is Ownable {
     //     PRIVATE FUNCTIONS      //
     ////////////////////////////////
 
-    function _lendFromProtocol(uint256 _amount, int256 _strategy) private {
+    function _lendFromProtocol(uint256 _amount, int256 _strategy) public {
         // INTERFACE WITH AAVE/BENQI
         if (_strategy == 0) {
             IERC20(collateralAsset).approve(address(aavePool), _amount);
-            aavePool.deposit(collateralAsset, _amount, msg.sender, 0);
+            aavePool.deposit(collateralAsset, _amount, address(this), 0);
             aavePool.setUserUseReserveAsCollateral(collateralAsset, true);
         } else {
             IERC20(collateralAsset).approve(address(qiAvax), _amount);
@@ -262,11 +278,11 @@ contract Vault is Ownable {
         }
     }
 
-    function _withdrawFromProtocol(uint256 _amount, int256 _strategy) private {
+    function _withdrawFromProtocol(uint256 _amount, int256 _strategy) public {
         // INTERFACE WITH AAVE/BENQI
         if (_strategy == 0) {
             IERC20(collateralAsset).approve(address(aavePool), _amount);
-            aavePool.withdraw(collateralAsset, _amount, msg.sender);
+            aavePool.withdraw(collateralAsset, _amount, address(this));
         } else {
             IERC20(collateralAsset).approve(address(qiAvax), _amount);
             qiAvax.redeem(_amount);
@@ -277,7 +293,7 @@ contract Vault is Ownable {
         // INTERFACE WITH AAVE/BENQI
         if (_strategy == 0) {
             IERC20(borrowAsset).approve(address(aavePool), _amount);
-            aavePool.borrow(collateralAsset, _amount, 2, 0, msg.sender);
+            aavePool.borrow(collateralAsset, _amount, 2, 0, address(this));
         } else {
             IERC20(borrowAsset).approve(address(qiAvax), _amount);
             qiAvax.borrow(_amount);
@@ -288,7 +304,7 @@ contract Vault is Ownable {
         // INTERFACE WITH AAVE/BENQI
         if (_strategy == 0) {
             IERC20(borrowAsset).approve(address(aavePool), _amount);
-            aavePool.repay(borrowAsset, _amount, 2, msg.sender);
+            aavePool.repay(borrowAsset, _amount, 2, address(this));
         } else {
             IERC20(borrowAsset).approve(address(aavePool), _amount);
             qiAvax.repayBorrow(_amount);

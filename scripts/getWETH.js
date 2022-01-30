@@ -7,10 +7,10 @@ async function main() {
   console.log("Signing contracts with the account: " + signer.address);
 
   // wAvax
-  const wAvax = await ethers.getContractAt("IWAvax", wAvaxAddr);
+  const wAvax = await ethers.getContractAt("WAVAX", wAvaxAddr);
 
   // Get an amount of WETH
-  const amount = "1";
+  const amount = "5";
   const amountAvax = ethers.utils.parseEther(amount);
   await wAvax.approve(signer.address, amountAvax);
   await wAvax.deposit({ value: amountAvax});
