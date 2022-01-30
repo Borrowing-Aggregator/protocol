@@ -27,6 +27,10 @@ contract BAToken is IBAToken, Ownable {
         return balances[id][account];
     }
 
+    function getTotalSupply(uint256 id) external view returns (uint256) {
+        return totalSupply[id];
+    }
+
     function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
         public
         view

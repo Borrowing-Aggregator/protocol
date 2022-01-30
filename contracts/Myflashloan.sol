@@ -4,13 +4,18 @@ pragma solidity ^0.8.0;
 import "./FlashLoanReceiverBaseV2.sol";
 import "./interfaces/ILendingPoolAddressesProviderV2.sol";
 import "./interfaces/ILendingPoolV2.sol";
+import "./interfaces/IVault.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Myflashloan is FlashLoanReceiverBaseV2, Ownable {
-    constructor(address _addressProvider)
+    address public vault_address;
+
+    constructor(address _addressProvider, address _vault_address)
         public
         FlashLoanReceiverBaseV2(_addressProvider)
-    {}
+    {
+        vault_address = _vault_address;
+    }
 
     /**
      * @dev This function must be called only be the LENDING_POOL and takes care of repaying
@@ -38,7 +43,7 @@ contract Myflashloan is FlashLoanReceiverBaseV2, Ownable {
         // the flashloaned amounts + premiums.
         // Therefore ensure your contract has enough to repay
         // these amounts.
-
+        IVault(vault_address).changeProtocol();
         // Approve the LendingPool contract allowance to *pull* the owed amount
         for (uint256 i = 0; i < assets.length; i++) {
             uint256 amountOwing = amounts[i] + premiums[i];

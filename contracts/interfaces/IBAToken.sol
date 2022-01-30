@@ -15,4 +15,6 @@ interface IBAToken is IERC1155 {
         uint256 _id,
         uint256 _amount
     ) external;
+
+    function getTotalSupply(uint256 id) external view returns (uint256);
 }
